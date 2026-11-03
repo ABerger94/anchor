@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#182028">
+<title>Anchor — Daily Toolkit</title>
+<style>
+  :root{
+    --bg:#182028; --panel:#222d38; --panel2:#2a3644; --ink:#eef2ee; --muted:#a9b6ae;
+    --sage:#9fc5a8; --teal:#7fb3b0; --line:#33424f; --warn:#e8c98a;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size:17px; line-height:1.45;
+    padding-bottom:172px;
+  }
+  header{
+    padding:22px 20px 6px; text-align:center;
+  }
+  header .mark{
+    width:46px; height:46px; margin:0 auto 6px; border:2px solid var(--sage); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--sage); font-size:24px; font-weight:600;
+  }
+  header h1{margin:0; font-size:26px; font-weight:600; letter-spacing:.4px;}
+  header p{margin:4px 0 0; color:var(--muted); font-size:14px;}
+  main{max-width:560px; margin:0 auto; padding:10px 16px 0;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; margin:14px 0;
+  }
+  .card h2{margin:0 0 4px; font-size:19px; font-weight:600;}
+  .card h3{margin:0 0 6px; font-size:16px; font-weight:600;}
+  .hint{color:var(--muted); font-size:14px; margin:2px 0 10px;}
+  label.flabel{display:block; font-size:15px; font-weight:600; margin:14px 0 6px;}
+  label.flabel:first-child{margin-top:2px;}
+  .faces{display:flex; gap:8px; justify-content:space-between;}
+  .facebtn{
+    flex:1; background:var(--panel2); border:2px solid var(--line); border-radius:14px;
+    padding:10px 2px 7px; color:var(--ink); cursor:pointer; text-align:center;
+  }
+  .facebtn .face{font-size:27px; display:block; line-height:1.15;}
+  .facebtn .flab{font-size:11px; color:var(--muted); display:block; margin-top:2px;}
+  .facebtn.sel{border-color:var(--sage); background:#2c3d33;}
+  .facebtn.sel .flab{color:var(--sage);}
+  .segrow{display:flex; gap:8px;}
+  .segbtn{
+    flex:1; min-height:48px; background:var(--panel2); border:2px solid var(--line); border-radius:12px;
+    color:var(--ink); font-size:15px; cursor:pointer; padding:8px 4px;
+  }
+  .segbtn.sel{border-color:var(--sage); background:#2c3d33; color:var(--sage); font-weight:600;}
+  input[type=range]{width:100%; accent-color:var(--sage); height:36px;}
+  .anxrow{display:flex; justify-content:space-between; align-items:baseline;}
+  .anxval{font-size:22px; font-weight:600; color:var(--sage);}
+  .scaleends{display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-top:-4px;}
+  input[type=text], input[type=number], input[type=date], textarea, select{
+    width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+    color:var(--ink); font-size:16px; padding:12px; font-family:inherit;
+  }
+  textarea{min-height:64px; resize:vertical;}
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--teal); outline-offset:0; border-color:var(--teal);}
+  .savednote{color:var(--sage); font-size:13px; min-height:18px; text-align:right; margin-top:6px;}
+  .toolgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .toolcard{
+    background:var(--panel2); border:1px solid var(--line); border-radius:14px; color:var(--ink);
+    padding:16px 12px; text-align:left; cursor:pointer; min-height:96px; width:100%;
+  }
+  .toolcard .tname{font-size:16px; font-weight:600; display:block; margin-bottom:4px;}
+  .toolcard .tdesc{font-size:13px; color:var(--muted); display:block;}
+  .bigbtn{
+    display:block; width:100%; min-height:54px; border:none; border-radius:14px; cursor:pointer;
+    background:var(--sage); color:#16211a; font-size:17px; font-weight:600; padding:14px; margin:10px 0;
+  }
+  .ghostbtn{
+    display:block; width:100%; min-height:50px; border:1px solid var(--line); border-radius:14px; cursor:pointer;
+    background:var(--panel2); color:var(--ink); font-size:16px; padding:12px; margin:8px 0;
+  }
+  .smallbtn{
+    border:1px solid var(--line); background:var(--panel2); color:var(--ink); border-radius:10px;
+    padding:8px 12px; font-size:14px; cursor:pointer; min-height:40px;
+  }
+  .smallbtn.sel{border-color:var(--sage); color:var(--sage);}
+  /* overlays */
+  .overlay{
+    position:fixed; inset:0; background:var(--bg); z-index:40; overflow-y:auto;
+    display:none; padding:18px 16px 40px;
+  }
+  .overlay.open{display:block;}
+  .overlay .inner{max-width:560px; margin:0 auto;}
+  .backbtn{
+    background:none; border:none; color:var(--teal); font-size:16px; cursor:pointer; padding:8px 0; min-height:44px;
+  }
+  .overlay h2{margin:4px 0 6px; font-size:22px;}
+  /* breathing */
+  .breathstage{display:flex; flex-direction:column; align-items:center; padding:26px 0 8px;}
+  .breathcircle{
+    width:170px; height:170px; border-radius:50%;
+    background:radial-gradient(circle at 50% 42%, #3d5a4c, #2c3d33 70%);
+    border:2px solid var(--sage);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    transition-property:width,height; transition-timing-function:ease-in-out;
+  }
+  .breathcircle .bphase{font-size:19px; font-weight:600; padding:0 14px;}
+  .breathcount{font-size:40px; font-weight:600; color:var(--sage); min-height:52px; margin-top:12px;}
+  .breathcycles{color:var(--muted); font-size:14px;}
+  /* grounding */
+  .gstep{text-align:center; padding:20px 0 4px;}
+  .gstep .gnum{font-size:56px; font-weight:700; color:var(--sage);}
+  .gstep .gsense{font-size:22px; font-weight:600; margin-top:2px;}
+  .gstep .gprompt{color:var(--muted); margin:8px auto 0; max-width:420px;}
+  .gdots{display:flex; gap:10px; justify-content:center; margin:22px 0;}
+  .gdot{width:26px; height:26px; border-radius:50%; border:2px solid var(--line); background:var(--panel2);}
+  .gdot.on{background:var(--sage); border-color:var(--sage);}
+  /* lists */
+  .itemrow{
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px; margin:8px 0;
+  }
+  .itemrow .itext{font-size:16px;}
+  .itemrow .imeta{color:var(--muted); font-size:13px; margin-top:2px;}
+  .itemrow .iactions{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .empty{color:var(--muted); font-size:15px; padding:8px 0;}
+  /* soothe */
+  .soothegrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .soothebtn{
+    background:var(--panel2); border:1px solid var(--line); border-radius:14px; color:var(--ink);
+    padding:14px 12px; text-align:left; cursor:pointer; min-height:84px; width:100%;
+  }
+  .soothebtn .sname{font-weight:600; font-size:16px; display:block;}
+  .soothebtn .sdesc{color:var(--muted); font-size:13px; display:block; margin-top:2px;}
+  /* helped rating */
+  .helpedbox{margin-top:18px; border-top:1px solid var(--line); padding-top:14px; display:none;}
+  .helpedbox.show{display:block;}
+  .helpedbox p{margin:0 0 8px; font-size:15px;}
+  .helpedrow{display:flex; gap:8px;}
+  .helpedthanks{color:var(--sage); font-size:15px; display:none; margin-top:10px;}
+  /* history */
+  .histrow{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .histrow:last-child{border-bottom:none;}
+  .histdate{width:86px; flex:none; font-size:14px; color:var(--muted);}
+  .histface{font-size:24px; width:32px; text-align:center; flex:none;}
+  .histbarwrap{flex:1; background:var(--panel2); border-radius:8px; height:20px; overflow:hidden;}
+  .histbar{height:100%; background:linear-gradient(90deg, var(--teal), var(--sage)); border-radius:8px; min-width:2px;}
+  .histnum{width:44px; flex:none; text-align:right; font-weight:600;}
+  .patternbox{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px; margin-top:10px; font-size:15px;}
+  /* bottom bars */
+  .reliefwrap{
+    position:fixed; left:0; right:0; bottom:56px; z-index:30;
+    padding:8px 16px; background:linear-gradient(transparent, var(--bg) 30%);
+  }
+  .reliefbtn{
+    display:block; width:100%; max-width:560px; margin:0 auto; min-height:58px; border:none; border-radius:16px;
+    background:var(--teal); color:#10201f; font-size:18px; font-weight:700; cursor:pointer;
+    box-shadow:0 4px 18px rgba(0,0,0,.35);
+  }
+  nav.tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:30; height:56px;
+    background:#1d2630; border-top:1px solid var(--line); display:flex;
+  }
+  nav.tabbar button{
+    flex:1; background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; min-height:56px;
+  }
+  nav.tabbar button.sel{color:var(--sage); font-weight:700;}
+  /* relief sheet */
+  .sheet{
+    position:fixed; inset:0; background:rgba(10,14,18,.66); z-index:50; display:none;
+    align-items:flex-end; justify-content:center;
+  }
+  .sheet.open{display:flex;}
+  .sheetbox{
+    background:var(--panel); width:100%; max-width:560px; border-radius:20px 20px 0 0;
+    padding:20px 18px 28px; border-top:1px solid var(--line);
+  }
+  .sheetbox h2{margin:0 0 4px; font-size:20px;}
+  .sheetbox .hint{margin-bottom:12px;}
+  .crisisline{font-size:14px; color:var(--muted); margin-top:14px; text-align:center;}
+  .crisisline a{color:var(--warn); font-weight:700; text-decoration:none;}
+  .about{font-size:14px; color:var(--muted);}
+  .about a{color:var(--warn); font-weight:700; text-decoration:none;}
+  .row2{display:flex; gap:8px;}
+  .row2 > *{flex:1;}
+  .checkline{display:flex; align-items:center; gap:10px; margin:10px 0; font-size:15px;}
+  .checkline input{width:22px; height:22px; accent-color:var(--sage);}
+</style>
+</head>
+<body>
+<header>
+  <div class="mark">&#9875;</div>
+  <h1>Anchor</h1>
+  <p id="todayline">Your daily toolkit</p>
+</header>
+<main>
+  <!-- CHECK-IN -->
+  <section class="view active" id="view-checkin">
+    <div class="card">
+      <h2>Today's check-in</h2>
+      <p class="hint">Thirty seconds. Everything saves as you go, and you can change any of it later today.</p>
+
+      <label class="flabel">How's your mood?</label>
+      <div class="faces" id="moodfaces"></div>
+
+      <div class="anxrow" style="margin-top:16px;">
+        <label class="flabel" style="margin:0;">Anxiety</label>
+        <span class="anxval" id="anxval">–</span>
+      </div>
+      <input type="range" id="anxrange" min="0" max="10" step="1" value="0" aria-label="Anxiety, 0 to 10">
+      <div class="scaleends"><span>0 — calm</span><span>10 — max</span></div>
+
+      <label class="flabel">Energy</label>
+      <div class="segrow" id="energyrow">
+        <button type="button" class="segbtn" data-energy="Low">Low</button>
+        <button type="button" class="segbtn" data-energy="Medium">Medium</button>
+        <button type="button" class="segbtn" data-energy="High">High</button>
+      </div>
+
+      <label class="flabel">Sleep last night</label>
+      <div class="row2">
+        <input type="number" id="sleephours" min="0" max="24" step="0.5" placeholder="Hours" inputmode="decimal">
+        <div class="segrow" id="sleepqrow">
+          <button type="button" class="segbtn" data-sleepq="Bad">Bad</button>
+          <button type="button" class="segbtn" data-sleepq="Okay">Okay</button>
+          <button type="button" class="segbtn" data-sleepq="Good">Good</button>
+        </div>
+      </div>
+
+      <label class="flabel">What's on your mind?</label>
+      <textarea id="mindtext" placeholder="Whatever's loudest right now. Optional."></textarea>
+
+      <label class="flabel">One intention for today</label>
+      <input type="text" id="intention" placeholder="One small thing, not five.">
+
+      <label class="flabel">One small good thing</label>
+      <input type="text" id="goodthing" placeholder="Can be filled in later, when it happens.">
+
+      <div class="savednote" id="savednote"></div>
+    </div>
+  </section>
+
+  <!-- TOOLKIT -->
+  <section class="view" id="view-toolkit">
+    <div class="card">
+      <h2>Toolkit</h2>
+      <p class="hint">Tools for right now. After you use one, tap how it landed — Anchor learns what actually works for you.</p>
+      <div class="toolgrid">
+        <button type="button" class="toolcard" data-tool="breathing"><span class="tname">Box breathing</span><span class="tdesc">4-4-4-4, guided, about a minute</span></button>
+        <button type="button" class="toolcard" data-tool="grounding"><span class="tname">5-4-3-2-1 grounding</span><span class="tdesc">Come back to the room, one sense at a time</span></button>
+        <button type="button" class="toolcard" data-tool="worry"><span class="tname">Worry parking</span><span class="tdesc">Write it down, set it aside for later</span></button>
+        <button type="button" class="toolcard" data-tool="reframe"><span class="tname">Thought reframe</span><span class="tdesc">Test a thought, find the balanced version</span></button>
+        <button type="button" class="toolcard" data-tool="soothe"><span class="tname">Self-soothe menu</span><span class="tdesc">Your list — the things that help you</span></button>
+        <button type="button" class="toolcard" data-tool="works"><span class="tname">What works for me</span><span class="tdesc">Your tools, ranked by your own ratings</span></button>
+      </div>
+    </div>
+    <div class="card about">
+      <h3 style="color:var(--ink);">About Anchor</h3>
+      <p>Anchor is a self-help tool. It is not medical advice, and it doesn't replace your doctor, therapist, or medication. Everything you enter stays on this device — nothing is sent anywhere.</p>
+      <p>If you're in crisis or thinking about harming yourself, call or text <a href="tel:988">988</a> (Suicide and Crisis Lifeline, US, 24/7), or text HOME to <a href="sms:741741">741741</a> (Crisis Text Line).</p>
+      <button type="button" class="ghostbtn" id="exportbtn">Export my data (JSON)</button>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="view" id="view-history">
+    <div class="card">
+      <h2>Last 7 check-ins</h2>
+      <p class="hint">Anxiety bars with the day's mood. Patterns are easier to see than to feel.</p>
+      <div id="histlist"></div>
+      <div class="patternbox" id="patternbox" style="display:none;"></div>
+    </div>
+    <div class="card">
+      <h2>What works for you</h2>
+      <p class="hint">Ranked from your own "did it help" taps.</p>
+      <div id="workslist"></div>
+    </div>
+  </section>
+</main>
+
+<!-- BREATHING OVERLAY -->
+<div class="overlay" id="tool-breathing">
+  <div class="inner">
+    <button type="button" class="backbtn" data-close>&larr; Back</button>
+    <h2>Box breathing</h2>
+    <p class="hint">In for 4, hold for 4, out for 4, hold for 4. Follow the circle.</p>
+    <div class="breathstage">
+      <div class="breathcircle" id="bcircle"><span class="bphase" id="bphase">Ready</span></div>
+      <div class="breathcount" id="bcount"></div>
+      <div class="breathcycles" id="bcycles">Cycles: 0</div>
+    </div>
+    <label class="checkline"><input type="checkbox" id="bvibe"> Vibrate on each step (phone in hand, eyes closed)</label>
+    <button type="button" class="bigbtn" id="bstart">Start</button>
+    <button type="button" class="ghostbtn" id="bstop">Stop</button>
+    <div class="helpedbox" id="helped-breathing"></div>
+  </div>
+</div>
+
+<!-- GROUNDING OVERLAY -->
+<div class="overlay" id="tool-grounding">
+  <div class="inner">
+    <button type="button" class="backbtn" data-close>&larr; Back</button>
+    <h2>5-4-3-2-1 grounding</h2>
+    <p class="hint">One sense at a time. Tap the big button each time you notice one.</p>
+    <div class="gstep">
+      <div class="gnum" id="gnum">5</div>
+      <div class="gsense" id="gsense">things you can see</div>
+      <p class="gprompt" id="gprompt">Look around slowly. Name them in your head as you tap.</p>
+      <div class="gdots" id="gdots"></div>
+      <button type="button" class="bigbtn" id="gtap">I notice one</button>
+      <button type="button" class="ghostbtn" id="gnext" style="display:none;">Next sense</button>
+      <button type="button" class="ghostbtn" id="grestart">Start over</button>
+    </div>
+    <div class="helpedbox" id="helped-grounding"></div>
+  </div>
+</div>
+
+<!-- WORRY OVERLAY -->
+<div class="overlay" id="tool-worry">
+  <div class="inner">
+    <button type="button" class="backbtn" data-close>&larr; Back</button>
+    <h2>Worry parking</h2>
+    <p class="hint">Write the worry down and set it aside. It's saved here — you don't have to carry it.</p>
+    <textarea id="worrytext" placeholder="The worry, in plain words."></textarea>
+    <label class="flabel">Revisit it</label>
+    <div class="row2">
+      <select id="worrywhen">
+        <option value="Later today">Later today</option>
+        <option value="Tomorrow">Tomorrow</option>
+        <option value="date">Pick a date…</option>
+      </select>
+      <input type="date" id="worrydate" style="display:none;">
+    </div>
+    <button type="button" class="bigbtn" id="worrypark">Park it</button>
+    <h3 style="margin-top:20px;">Parked worries</h3>
+    <div id="worrylist"></div>
+    <div class="helpedbox" id="helped-worry"></div>
+  </div>
+</div>
+
+<!-- REFRAME OVERLAY -->
+<div class="overlay" id="tool-reframe">
+  <div class="inner">
+    <button type="button" class="backbtn" data-close>&larr; Back</button>
+    <h2>Thought reframe</h2>
+    <p class="hint">Three steps: the thought, what's actually true, the balanced version.</p>
+    <label class="flabel">1. The thought</label>
+    <textarea id="rfthought" placeholder="e.g. I'm going to run out of money and lose everything."></textarea>
+    <label class="flabel">2a. What's true that supports it?</label>
+    <textarea id="rffor" placeholder="Just the facts."></textarea>
+    <label class="flabel">2b. What's true that doesn't?</label>
+    <textarea id="rfagainst" placeholder="Also just the facts — including what's already handled."></textarea>
+    <label class="flabel">3. A balanced version, in your words</label>
+    <textarea id="rfbalanced" placeholder="e.g. Money is tight and the storage bill is real, and I have a plan and a paycheck coming."></textarea>
+    <button type="button" class="bigbtn" id="rfsave">Save reframe</button>
+    <h3 style="margin-top:20px;">Saved reframes</h3>
+    <div id="rflist"></div>
+    <div class="helpedbox" id="helped-reframe"></div>
+  </div>
+</div>
+
+<!-- SOOTHE OVERLAY -->
+<div class="overlay" id="tool-soothe">
+  <div class="inner">
+    <button type="button" class="backbtn" data-close>&larr; Back</button>
+    <h2>Self-soothe menu</h2>
+    <p class="hint">Your list. Pick one, do it, then tap how it landed.</p>
+    <div class="soothegrid" id="soothegrid"></div>
+    <div class="helpedbox" id="helped-soothe"></div>
+  </div>
+</div>
+
+<!-- WORKS OVERLAY -->
+<div class="overlay" id="tool-works">
+  <div class="inner">
+    <button type="button" class="backbtn" data-close>&larr; Back</button>
+    <h2>What works for me</h2>
+    <p class="hint">Ranked from your own ratings after using tools.</p>
+    <div id="workslist2"></div>
+  </div>
+</div>
+
+<!-- RELIEF SHEET -->
+<div class="sheet" id="reliefsheet">
+  <div class="sheetbox">
+    <h2>I need relief now</h2>
+    <p class="hint">Pick one. No wrong choice.</p>
+    <button type="button" class="bigbtn" data-relief="breathing">Box breathing</button>
+    <button type="button" class="bigbtn" data-relief="grounding">5-4-3-2-1 grounding</button>
+    <button type="button" class="bigbtn" data-relief="soothe">Self-soothe menu</button>
+    <button type="button" class="ghostbtn" id="reliefclose">Not right now</button>
+    <p class="crisisline">In crisis? Call or text <a href="tel:988">988</a> — 24/7, US.</p>
+  </div>
+</div>
+
+<!-- BOTTOM BARS -->
+<div class="reliefwrap">
+  <button type="button" class="reliefbtn" id="reliefbtn">I need relief now</button>
+</div>
+<nav class="tabbar">
+  <button type="button" data-view="checkin" class="sel">Check-in</button>
+  <button type="button" data-view="toolkit">Toolkit</button>
+  <button type="button" data-view="history">History</button>
+</nav>
+
+<script>
+(function(){
+"use strict";
+/* ---------- storage ---------- */
+var LS = { checkins:"anchor_v1_checkins", worries:"anchor_v1_worries", reframes:"anchor_v1_reframes", helped:"anchor_v1_helped" };
+function load(key, fallback){ try{ var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
+function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+function todayKey(d){ d = d || new Date(); var m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0"); return d.getFullYear()+"-"+m+"-"+day; }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* ---------- header ---------- */
+var now = new Date();
+var dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var monNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+el("todayline").textContent = dayNames[now.getDay()] + ", " + monNames[now.getMonth()] + " " + now.getDate() + " — your daily toolkit";
+
+/* ---------- tabs ---------- */
+function showView(name){
+  ["checkin","toolkit","history"].forEach(function(v){
+    el("view-"+v).classList.toggle("active", v===name);
+  });
+  document.querySelectorAll("nav.tabbar button").forEach(function(b){
+    b.classList.toggle("sel", b.getAttribute("data-view")===name);
+  });
+  if(name==="history"){ renderHistory(); }
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav.tabbar button").forEach(function(b){
+  b.addEventListener("click", function(){ showView(b.getAttribute("data-view")); });
+});
+
+/* ---------- check-in ---------- */
+var MOODS = [
+  {face:"\u{1F61E}", label:"Rough"},
+  {face:"\u{1F615}", label:"Low"},
+  {face:"\u{1F610}", label:"Okay"},
+  {face:"\u{1F642}", label:"Good"},
+  {face:"\u{1F60A}", label:"Great"}
+];
+var checkins = load(LS.checkins, {});
+var today = todayKey();
+var entry = checkins[today] || { mood:null, anxiety:null, energy:null, sleepHours:"", sleepQ:null, mind:"", intention:"", good:"" };
+var savedTimer = null;
+function noteSaved(){
+  el("savednote").textContent = "Saved";
+  if(savedTimer) clearTimeout(savedTimer);
+  savedTimer = setTimeout(function(){ el("savednote").textContent = ""; }, 2000);
+}
+function persist(){
+  checkins[today] = entry;
+  save(LS.checkins, checkins);
+  noteSaved();
+}
+/* mood faces */
+var facesWrap = el("moodfaces");
+MOODS.forEach(function(m, i){
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "facebtn"; b.setAttribute("data-mood", String(i));
+  b.innerHTML = '<span class="face">'+m.face+'</span><span class="flab">'+m.label+'</span>';
+  b.addEventListener("click", function(){
+    entry.mood = i; persist(); paintCheckin();
+  });
+  facesWrap.appendChild(b);
+});
+el("anxrange").addEventListener("input", function(){
+  entry.anxiety = parseInt(this.value, 10);
+  el("anxval").textContent = String(entry.anxiety);
+  persist();
+});
+document.querySelectorAll("#energyrow .segbtn").forEach(function(b){
+  b.addEventListener("click", function(){ entry.energy = b.getAttribute("data-energy"); persist(); paintCheckin(); });
+});
+document.querySelectorAll("#sleepqrow .segbtn").forEach(function(b){
+  b.addEventListener("click", function(){ entry.sleepQ = b.getAttribute("data-sleepq"); persist(); paintCheckin(); });
+});
+el("sleephours").addEventListener("input", function(){ entry.sleepHours = this.value; persist(); });
+el("mindtext").addEventListener("input", function(){ entry.mind = this.value; persist(); });
+el("intention").addEventListener("input", function(){ entry.intention = this.value; persist(); });
+el("goodthing").addEventListener("input", function(){ entry.good = this.value; persist(); });
+function paintCheckin(){
+  document.querySelectorAll("#moodfaces .facebtn").forEach(function(b){
+    b.classList.toggle("sel", entry.mood !== null && Number(b.getAttribute("data-mood")) === entry.mood);
+  });
+  if(entry.anxiety !== null && entry.anxiety !== undefined){
+    el("anxrange").value = entry.anxiety;
+    el("anxval").textContent = String(entry.anxiety);
+  } else {
+    el("anxval").textContent = "–";
+  }
+  document.querySelectorAll("#energyrow .segbtn").forEach(function(b){
+    b.classList.toggle("sel", b.getAttribute("data-energy") === entry.energy);
+  });
+  document.querySelectorAll("#sleepqrow .segbtn").forEach(function(b){
+    b.classList.toggle("sel", b.getAttribute("data-sleepq") === entry.sleepQ);
+  });
+  if(document.activeElement !== el("sleephours")) el("sleephours").value = entry.sleepHours || "";
+  if(document.activeElement !== el("mindtext")) el("mindtext").value = entry.mind || "";
+  if(document.activeElement !== el("intention")) el("intention").value = entry.intention || "";
+  if(document.activeElement !== el("goodthing")) el("goodthing").value = entry.good || "";
+}
+paintCheckin();
+
+/* ---------- helped ratings ---------- */
+function showHelped(boxId, toolName){
+  var box = el(boxId);
+  box.innerHTML = "";
+  var p = document.createElement("p"); p.textContent = "Did it help?";
+  var row = document.createElement("div"); row.className = "helpedrow";
+  var thanks = document.createElement("div"); thanks.className = "helpedthanks"; thanks.textContent = "Noted. Anchor is learning what works for you.";
+  [["helped","Helped"],["a little","A little"],["didn't","Didn't"]].forEach(function(pair){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "segbtn"; b.textContent = pair[1];
+    b.addEventListener("click", function(){
+      var log = load(LS.helped, []);
+      log.push({ tool: toolName, rating: pair[0], ts: Date.now() });
+      save(LS.helped, log);
+      row.style.display = "none"; p.style.display = "none"; thanks.style.display = "block";
+    });
+    row.appendChild(b);
+  });
+  box.appendChild(p); box.appendChild(row); box.appendChild(thanks);
+  box.classList.add("show");
+}
+function computeWorks(){
+  var log = load(LS.helped, []);
+  var by = {};
+  log.forEach(function(h){
+    if(!by[h.tool]) by[h.tool] = { tool:h.tool, n:0, score:0 };
+    by[h.tool].n += 1;
+    by[h.tool].score += (h.rating === "helped" ? 2 : (h.rating === "a little" ? 1 : 0));
+  });
+  var arr = Object.keys(by).map(function(k){ return by[k]; });
+  arr.sort(function(a,b){ return (b.score/Math.max(b.n,1)) - (a.score/Math.max(a.n,1)) || b.n - a.n; });
+  return arr;
+}
+function renderWorks(targetId){
+  var wrap = el(targetId);
+  var arr = computeWorks();
+  if(!arr.length){
+    wrap.innerHTML = '<p class="empty">Nothing rated yet. Use a tool, then tap "Helped", "A little", or "Didn\'t" — your ranking builds from that.</p>';
+    return;
+  }
+  wrap.innerHTML = "";
+  arr.forEach(function(w){
+    var pct = Math.round((w.score / (w.n*2)) * 100);
+    var row = document.createElement("div"); row.className = "itemrow";
+    row.innerHTML = '<div class="itext">'+esc(w.tool)+'</div><div class="imeta">Helped score '+pct+'% · rated '+w.n+' time'+(w.n===1?"":"s")+'</div>';
+    wrap.appendChild(row);
+  });
+}
+
+/* ---------- overlays ---------- */
+function openTool(name){
+  closeAllOverlays();
+  var o = el("tool-"+name);
+  if(o) o.classList.add("open");
+  if(name==="works") renderWorks("workslist2");
+  if(name==="worry") renderWorries();
+  if(name==="reframe") renderReframes();
+  window.scrollTo(0,0);
+}
+function closeAllOverlays(){
+  document.querySelectorAll(".overlay").forEach(function(o){ o.classList.remove("open"); });
+  stopBreathing();
+}
+document.querySelectorAll("[data-close]").forEach(function(b){
+  b.addEventListener("click", closeAllOverlays);
+});
+document.querySelectorAll(".toolcard").forEach(function(c){
+  c.addEventListener("click", function(){ openTool(c.getAttribute("data-tool")); });
+});
+
+/* ---------- relief sheet ---------- */
+el("reliefbtn").addEventListener("click", function(){ el("reliefsheet").classList.add("open"); });
+el("reliefclose").addEventListener("click", function(){ el("reliefsheet").classList.remove("open"); });
+document.querySelectorAll("[data-relief]").forEach(function(b){
+  b.addEventListener("click", function(){
+    el("reliefsheet").classList.remove("open");
+    openTool(b.getAttribute("data-relief"));
+  });
+});
+
+/* ---------- box breathing ---------- */
+var BPHASES = [
+  { name:"Breathe in", size:200 },
+  { name:"Hold", size:200 },
+  { name:"Breathe out", size:140 },
+  { name:"Hold", size:140 }
+];
+var bTimer = null, bPhaseIdx = 0, bElapsed = 0, bCycles = 0, bRunning = false;
+function bPaint(){
+  var ph = BPHASES[bPhaseIdx];
+  el("bphase").textContent = ph.name;
+  var remain = 4 - Math.floor(bElapsed);
+  el("bcount").textContent = bRunning ? String(Math.max(remain,1)) : "";
+  var c = el("bcircle");
+  c.style.transitionDuration = "1000ms";
+  c.style.width = ph.size+"px"; c.style.height = ph.size+"px";
+  el("bcycles").textContent = "Cycles: " + bCycles;
+}
+function bTick(){
+  bElapsed += 0.25;
+  if(bElapsed >= 4){
+    bElapsed = 0;
+    bPhaseIdx = (bPhaseIdx + 1) % 4;
+    if(bPhaseIdx === 0) bCycles += 1;
+    if(el("bvibe").checked && navigator.vibrate){ try{ navigator.vibrate(30); }catch(e){} }
+  }
+  bPaint();
+}
+function startBreathing(){
+  if(bRunning) return;
+  bRunning = true; bPhaseIdx = 0; bElapsed = 0; bCycles = 0;
+  el("bstart").textContent = "Breathing…";
+  bTimer = setInterval(bTick, 250);
+  bPaint();
+}
+function stopBreathing(){
+  if(bTimer){ clearInterval(bTimer); bTimer = null; }
+  if(bRunning && bCycles >= 1){ showHelped("helped-breathing", "Box breathing"); }
+  bRunning = false;
+  var s = el("bstart"); if(s) s.textContent = "Start";
+  var c = el("bcircle"); if(c){ c.style.width = "170px"; c.style.height = "170px"; }
+  var ph = el("bphase"); if(ph) ph.textContent = "Ready";
+  var bc = el("bcount"); if(bc) bc.textContent = "";
+}
+el("bstart").addEventListener("click", startBreathing);
+el("bstop").addEventListener("click", stopBreathing);
+
+/* ---------- grounding ---------- */
+var GSTEPS = [
+  { n:5, sense:"things you can see", prompt:"Look around slowly. Name each one in your head as you tap." },
+  { n:4, sense:"things you can hear", prompt:"Near or far — the hum, the street, your own breathing." },
+  { n:3, sense:"things you can feel", prompt:"The chair, your clothes, air on your skin. Wiggle your toes." },
+  { n:2, sense:"things you can smell", prompt:"Even faint ones count. If nothing, a favorite smell in memory counts." },
+  { n:1, sense:"thing you can taste", prompt:"A sip of something, or just the taste in your mouth right now." }
+];
+var gIdx = 0, gCount = 0;
+function gPaint(){
+  var st = GSTEPS[gIdx];
+  el("gnum").textContent = String(st.n);
+  el("gsense").textContent = st.sense;
+  el("gprompt").textContent = st.prompt;
+  var dots = el("gdots"); dots.innerHTML = "";
+  for(var i=0;i<st.n;i++){
+    var d = document.createElement("div");
+    d.className = "gdot" + (i < gCount ? " on" : "");
+    dots.appendChild(d);
+  }
+  el("gtap").style.display = (gCount >= st.n) ? "none" : "block";
+  var nx = el("gnext");
+  if(gCount >= st.n){
+    nx.style.display = "block";
+    nx.textContent = (gIdx === GSTEPS.length-1) ? "Finish" : "Next sense";
+  } else {
+    nx.style.display = "none";
+  }
+}
+el("gtap").addEventListener("click", function(){
+  if(gCount < GSTEPS[gIdx].n){ gCount += 1; gPaint(); }
+});
+el("gnext").addEventListener("click", function(){
+  if(gIdx === GSTEPS.length-1){
+    el("gnum").textContent = "✓";
+    el("gsense").textContent = "You're back in the room.";
+    el("gprompt").textContent = "Notice how your body feels compared to when you started.";
+    el("gdots").innerHTML = "";
+    el("gtap").style.display = "none";
+    el("gnext").style.display = "none";
+    showHelped("helped-grounding", "5-4-3-2-1 grounding");
+  } else {
+    gIdx += 1; gCount = 0; gPaint();
+  }
+});
+el("grestart").addEventListener("click", function(){ gIdx = 0; gCount = 0; gPaint(); });
+gPaint();
+
+/* ---------- worry parking ---------- */
+el("worrywhen").addEventListener("change", function(){
+  el("worrydate").style.display = (this.value === "date") ? "block" : "none";
+});
+function renderWorries(){
+  var list = load(LS.worries, []);
+  var wrap = el("worrylist"); wrap.innerHTML = "";
+  if(!list.length){
+    wrap.innerHTML = '<p class="empty">Nothing parked. When a worry shows up, put it here.</p>';
+    return;
+  }
+  list.forEach(function(w, idx){
+    var row = document.createElement("div"); row.className = "itemrow";
+    row.innerHTML = '<div class="itext">'+esc(w.text)+'</div><div class="imeta">Revisit: '+esc(w.when)+'</div>';
+    var acts = document.createElement("div"); acts.className = "iactions";
+    var rf = document.createElement("button"); rf.type = "button"; rf.className = "smallbtn"; rf.textContent = "Reframe it";
+    rf.addEventListener("click", function(){
+      el("rfthought").value = w.text;
+      openTool("reframe");
+    });
+    var done = document.createElement("button"); done.type = "button"; done.className = "smallbtn"; done.textContent = "Let it go";
+    done.addEventListener("click", function(){
+      var cur = load(LS.worries, []);
+      cur.splice(idx, 1);
+      save(LS.worries, cur);
+      renderWorries();
+    });
+    acts.appendChild(rf); acts.appendChild(done);
+    row.appendChild(acts);
+    wrap.appendChild(row);
+  });
+}
+el("worrypark").addEventListener("click", function(){
+  var text = el("worrytext").value.trim();
+  if(!text) return;
+  var when = el("worrywhen").value;
+  if(when === "date"){
+    var dv = el("worrydate").value;
+    when = dv ? ("on " + dv) : "Tomorrow";
+  }
+  var list = load(LS.worries, []);
+  list.unshift({ text:text, when:when, ts:Date.now() });
+  save(LS.worries, list);
+  el("worrytext").value = "";
+  renderWorries();
+  showHelped("helped-worry", "Worry parking");
+});
+
+/* ---------- reframe ---------- */
+function renderReframes(){
+  var list = load(LS.reframes, []);
+  var wrap = el("rflist"); wrap.innerHTML = "";
+  if(!list.length){
+    wrap.innerHTML = '<p class="empty">No reframes saved yet.</p>';
+    return;
+  }
+  list.forEach(function(r){
+    var row = document.createElement("div"); row.className = "itemrow";
+    row.innerHTML = '<div class="itext">'+esc(r.balanced || r.thought)+'</div>' +
+      (r.balanced && r.thought ? '<div class="imeta">From: '+esc(r.thought)+'</div>' : '');
+    wrap.appendChild(row);
+  });
+}
+el("rfsave").addEventListener("click", function(){
+  var t = el("rfthought").value.trim();
+  var bal = el("rfbalanced").value.trim();
+  if(!t && !bal) return;
+  var list = load(LS.reframes, []);
+  list.unshift({ thought:t, forText:el("rffor").value.trim(), againstText:el("rfagainst").value.trim(), balanced:bal, ts:Date.now() });
+  save(LS.reframes, list);
+  el("rfthought").value = ""; el("rffor").value = ""; el("rfagainst").value = ""; el("rfbalanced").value = "";
+  renderReframes();
+  showHelped("helped-reframe", "Thought reframe");
+});
+
+/* ---------- self-soothe ---------- */
+var SOOTHE = [
+  { name:"Walk with Cash", desc:"Around the block counts. Bring him, leave the phone worries here." },
+  { name:"Hold Hallie", desc:"Cat time. Let her set the pace." },
+  { name:"Check on Maple", desc:"Watch her for a bit. Slow animals slow people down." },
+  { name:"Cold water", desc:"Splash your face, or hold something cold. Resets the dial." },
+  { name:"Step outside", desc:"Fresh air, two minutes, no phone." },
+  { name:"Shower", desc:"Warm or cool — a hard reset for the day." },
+  { name:"Gravity — John Mayer", desc:"Your karaoke anchor song. Just listen once through." },
+  { name:"Paper Pepper video", desc:"A quiet one, especially at night. Paper sounds, no talking." }
+];
+var sg = el("soothegrid");
+SOOTHE.forEach(function(s){
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "soothebtn";
+  b.innerHTML = '<span class="sname">'+esc(s.name)+'</span><span class="sdesc">'+esc(s.desc)+'</span>';
+  b.addEventListener("click", function(){ showHelped("helped-soothe", "Self-soothe: " + s.name); });
+  sg.appendChild(b);
+});
+
+/* ---------- history ---------- */
+function renderHistory(){
+  var data = load(LS.checkins, {});
+  var dates = Object.keys(data).filter(function(d){
+    var e = data[d];
+    return e && (e.anxiety !== null && e.anxiety !== undefined || e.mood !== null && e.mood !== undefined);
+  }).sort().reverse().slice(0, 7);
+  var wrap = el("histlist"); wrap.innerHTML = "";
+  if(!dates.length){
+    wrap.innerHTML = '<p class="empty">No check-ins yet. Your first one starts the picture.</p>';
+  } else {
+    dates.forEach(function(dstr){
+      var e = data[dstr];
+      var parts = dstr.split("-");
+      var dt = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+      var label = dayNames[dt.getDay()].slice(0,3) + " " + monNames[dt.getMonth()] + " " + dt.getDate();
+      var anx = (e.anxiety === null || e.anxiety === undefined) ? 0 : e.anxiety;
+      var row = document.createElement("div"); row.className = "histrow";
+      row.innerHTML =
+        '<div class="histdate">'+label+'</div>' +
+        '<div class="histface">'+(e.mood !== null && e.mood !== undefined ? MOODS[e.mood].face : "·")+'</div>' +
+        '<div class="histbarwrap"><div class="histbar" style="width:'+(anx*10)+'%"></div></div>' +
+        '<div class="histnum">'+((e.anxiety === null || e.anxiety === undefined) ? "–" : anx + "/10")+'</div>';
+      wrap.appendChild(row);
+    });
+  }
+  /* pattern: anxiety vs sleep, from his own entries only */
+  var pb = el("patternbox");
+  var withSleep = dates.map(function(d){ return data[d]; }).filter(function(e){
+    return e.sleepHours !== "" && e.sleepHours !== null && e.sleepHours !== undefined &&
+           e.anxiety !== null && e.anxiety !== undefined && !isNaN(parseFloat(e.sleepHours));
+  });
+  var short = withSleep.filter(function(e){ return parseFloat(e.sleepHours) < 6; });
+  var ok = withSleep.filter(function(e){ return parseFloat(e.sleepHours) >= 6; });
+  if(short.length >= 2 && ok.length >= 2){
+    var avg = function(a){ return a.reduce(function(s,e){ return s + e.anxiety; }, 0) / a.length; };
+    var diff = avg(short) - avg(ok);
+    if(Math.abs(diff) >= 1){
+      pb.style.display = "block";
+      pb.textContent = "From your own check-ins: on nights under 6 hours of sleep, your anxiety averaged " +
+        avg(short).toFixed(1) + " vs " + avg(ok).toFixed(1) + " on better-sleep nights (" +
+        short.length + " short nights, " + ok.length + " better nights in this window).";
+    } else {
+      pb.style.display = "block";
+      pb.textContent = "From your own check-ins: no strong sleep–anxiety pattern in this window yet — short-sleep days averaged " +
+        avg(short).toFixed(1) + " vs " + avg(ok).toFixed(1) + " on better-sleep days.";
+    }
+  } else {
+    pb.style.display = "none";
+  }
+  renderWorks("workslist");
+}
+
+/* ---------- export ---------- */
+el("exportbtn").addEventListener("click", function(){
+  var data = {
+    checkins: load(LS.checkins, {}),
+    worries: load(LS.worries, []),
+    reframes: load(LS.reframes, []),
+    helped: load(LS.helped, [])
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "anchor-data.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+});
+})();
+</script>
+</body>
+</html>
